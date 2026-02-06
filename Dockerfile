@@ -27,6 +27,8 @@ RUN wget https://pallini.di.uniroma1.it/nauty27r1.tar.gz \
 
 # Verify geng works
 RUN /usr/local/bin/geng 1 || true
+# Install RDKit via conda-forge
+RUN conda install -c conda-forge rdkit python=3.10 -y && conda clean -afy
 
 # -----------------------------
 # Python + app setup
