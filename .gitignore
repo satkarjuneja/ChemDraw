@@ -1,0 +1,5 @@
+*.png
+static/generated/*.png
+api/*.png
+__pycache__/
+

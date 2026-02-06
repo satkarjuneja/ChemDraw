@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Chem Draw</title>
+    <style>
+        body{
+            background-color: rgb(51, 245, 187);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            font-size: 40px;
+            margin-bottom: 20px;
+        }
+
+        #faltu {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #result {
+            max-width: 80%;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Welcome To Chem Draw</h1>
+
+    <div id="faltu">
+        <h2 style="font-size: 30px;">Enter a Simple Molecule</h2>
+        <input type="text" id="formula" style="border-radius: 20px; font-size: 30px;">
+        <button onclick="backend()" style="font-size: 30px; border-radius: 20px;">Generate</button>
+    </div>
+
+    <img src="/static/molecules_grid.png?v=0" id="result" style="border-radius: 20px;">
+
+    <script>
+        async function backend() {
+            const formula = document.getElementById("formula").value;
+            if (!formula) return alert("Enter a formula");
+
+            await fetch("/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ formula })
+            });
+
+            // cache buster
+            const img = document.getElementById("result");
+            img.src = "/static/molecules_grid.png?v=" + Date.now();
+        }
+    </script>
+</body>
+
+</html>
