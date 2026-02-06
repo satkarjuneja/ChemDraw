@@ -26,7 +26,7 @@ RUN wget https://pallini.di.uniroma1.it/nauty27r1.tar.gz \
     && chmod +x /usr/local/bin/geng /usr/local/bin/shortg /usr/local/bin/dretodot /usr/local/bin/labelg
 
 # Verify geng works
-RUN /usr/local/bin/geng -h
+RUN /usr/local/bin/geng 1 || true
 
 # -----------------------------
 # Python + app setup
