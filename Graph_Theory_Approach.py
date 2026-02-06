@@ -24,7 +24,7 @@ def generate_topologies(n_atoms, max_degree):
     Uses geng to generate all connected, non-isomorphic graphs
     """
     
-    cmd = ["geng", "-c", f"-D{max_degree}", str(n_atoms)]
+    cmd = ["/usr/bin/geng", "-c", f"-D{max_degree}", str(n_atoms)]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, text=True)
     graphs = []
     for line in proc.stdout:

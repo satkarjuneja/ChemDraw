@@ -1,17 +1,19 @@
+# Base image with conda
 FROM continuumio/miniconda3:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
+ENV PATH="/usr/local/bin:$PATH"  # ensure geng symlink is in PATH
 
 # -----------------------------
-# System dependencies (nauty / geng)
+# System dependencies
 # -----------------------------
 RUN apt-get update && apt-get install -y \
     nauty \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Ensure geng is on PATH (nauty installs it in /usr/bin)
+# Symlink geng to /usr/local/bin so subprocess finds it
 RUN ln -s /usr/bin/geng /usr/local/bin/geng
 
 # -----------------------------
@@ -29,13 +31,13 @@ RUN conda install -c conda-forge \
 WORKDIR /app
 COPY . /app
 
-# Ensure runtime-generated directories exist
+# Ensure static directory exists for saving PNGs
 RUN mkdir -p /app/static
 
-# Python deps
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Hugging Face requires port 7860
+# Expose HF-required port
 EXPOSE 7860
 
 # Run Flask backend

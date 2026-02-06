@@ -24,7 +24,9 @@ CORS(app)  # allow frontend requests from another origin if needed
 
 # fixed PNG path
 
-PNG_FILE = os.path.join(os.getcwd(), "molecules_grid.png")
+STATIC_DIR = os.path.join(os.getcwd(), "static")
+os.makedirs(STATIC_DIR, exist_ok=True)  # ensures directory exists
+PNG_FILE = os.path.join(STATIC_DIR, "molecules_grid.png")
 
 
 
@@ -45,7 +47,7 @@ def generate():
     # run your existing Matrix_Generation.py script with formula and PNG_FILE as output
 
 
-    subprocess.run([sys.executable, "Matrix_Generation.py", formula, PNG_FILE], check=True)
+    # subprocess.run([sys.executable, "Matrix_Generation.py", formula, PNG_FILE], check=True)
 
 
     subprocess.run([sys.executable, "Graph_Theory_Approach.py", formula, PNG_FILE], check=True)
