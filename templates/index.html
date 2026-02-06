@@ -3,83 +3,96 @@
 
 <head>
     <title>Chem Draw</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
-            padding: 0;
-            font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #1abc9c, #16a085);
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
             min-height: 100vh;
-            color: #fff;
+            color: #f0f0f0;
+            padding: 2rem 0;
         }
 
         h1 {
             font-size: 3rem;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-            margin-bottom: 1rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
         }
 
         #faltu {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 2rem;
-            border-radius: 25px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
+            justify-content: center;
             gap: 1rem;
+            padding: 2rem 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            width: 80%;
+            max-width: 1000px;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
         }
 
         #faltu h2 {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
+            font-weight: 500;
             margin: 0;
+            min-width: 180px;
         }
 
         #formula {
-            padding: 0.5rem 1rem;
-            font-size: 1.5rem;
-            border-radius: 15px;
+            padding: 0.8rem 1.2rem;
+            font-size: 1.3rem;
+            border-radius: 12px;
             border: none;
             outline: none;
+            flex: 1;
             min-width: 250px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
             transition: all 0.3s ease;
+        }
+
+        #formula::placeholder {
+            color: #ddd;
         }
 
         #formula:focus {
-            box-shadow: 0 0 10px #fff;
-            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+            transform: scale(1.03);
         }
 
         button {
-            padding: 0.7rem 1.5rem;
-            font-size: 1.5rem;
+            padding: 0.8rem 1.8rem;
+            font-size: 1.2rem;
+            border-radius: 12px;
             border: none;
-            border-radius: 15px;
-            background: #ffffff55;
-            color: #fff;
+            background: linear-gradient(135deg, #00f5a0, #00d1ff);
+            color: #000;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 6px 18px rgba(0, 255, 255, 0.3);
         }
 
         button:hover {
-            background: #fff;
-            color: #16a085;
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 255, 255, 0.5);
         }
 
         #result {
-            margin-top: 2rem;
-            max-width: 80%;
+            width: 85%;
+            max-width: 1200px;
             border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             transition: transform 0.3s ease;
         }
 
@@ -87,12 +100,17 @@
             transform: scale(1.02);
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 900px) {
             #faltu {
+                flex-direction: column;
                 width: 90%;
             }
 
             #formula {
+                width: 100%;
+            }
+
+            button {
                 width: 100%;
             }
         }
@@ -103,8 +121,8 @@
     <h1>Chem Draw</h1>
 
     <div id="faltu">
-        <h2>Enter a Molecule</h2>
-        <input type="text" id="formula" placeholder="e.g. C6H6">
+        <h2>Enter Molecule Formula</h2>
+        <input type="text" id="formula" placeholder="e.g., C6H6">
         <button onclick="backend()">Generate</button>
     </div>
 
@@ -121,7 +139,6 @@
                 body: JSON.stringify({ formula })
             });
 
-            // cache buster
             const img = document.getElementById("result");
             img.src = "/static/molecules_grid.png?v=" + Date.now();
         }
