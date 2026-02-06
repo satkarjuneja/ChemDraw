@@ -1,48 +1,45 @@
-# Base image with conda
 FROM continuumio/miniconda3:latest
 
-# -----------------------------
-# Environment
-# -----------------------------
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
-# Ensure geng symlink is in PATH for subprocess
-ENV PATH="/usr/local/bin:$PATH"
 
 # -----------------------------
-# System dependencies (nauty / geng)
+# System dependencies
 # -----------------------------
 RUN apt-get update && apt-get install -y \
-    nauty \
     build-essential \
+    wget \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Symlink geng to /usr/local/bin so subprocess finds it
-RUN ln -s /usr/bin/geng /usr/local/bin/geng
+# -----------------------------
+# Install nauty (geng)
+# -----------------------------
+WORKDIR /tmp
+
+RUN wget https://pallini.di.uniroma1.it/nauty27r1.tar.gz \
+    && tar -xzf nauty27r1.tar.gz \
+    && cd nauty27r1 \
+    && ./configure \
+    && make -j$(nproc) \
+    && make install \
+    && ln -sf /usr/local/bin/geng /usr/bin/geng
+
+# HARD FAIL if geng is missing
+RUN /usr/bin/geng -h >/dev/null
 
 # -----------------------------
-# Python + RDKit
-# -----------------------------
-RUN conda install -c conda-forge \
-    python=3.10 \
-    rdkit \
-    -y \
-    && conda clean -afy
-
-# -----------------------------
-# App setup
+# Python environment
 # -----------------------------
 WORKDIR /app
-COPY . /app
 
-# Ensure static directory exists for saving PNGs
-RUN mkdir -p /app/static
-
-# Install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose Hugging Face-required port
-EXPOSE 7860
+COPY . .
 
-# Run Flask backend
+# -----------------------------
+# Expose & run
+# -----------------------------
+EXPOSE 5000
 CMD ["python", "backend.py"]
