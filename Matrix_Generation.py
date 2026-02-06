@@ -26,6 +26,10 @@ def adjacency_to_smiles(A, atoms):
 import re
 
 # X = input("Input simple chemical formula: ")
+if(len(sys.argv) < 2):
+    print("Please provide a formula!")
+    sys.exit()
+    
 X=sys.argv[1]
 tokens = re.findall(r'([CHON])(\d*)', X)
 
