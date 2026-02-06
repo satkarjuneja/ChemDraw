@@ -1,12 +1,16 @@
 # Base image with conda
 FROM continuumio/miniconda3:latest
 
+# -----------------------------
+# Environment
+# -----------------------------
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
-ENV PATH="/usr/local/bin:$PATH"  # ensure geng symlink is in PATH
+# Ensure geng symlink is in PATH for subprocess
+ENV PATH="/usr/local/bin:$PATH"
 
 # -----------------------------
-# System dependencies
+# System dependencies (nauty / geng)
 # -----------------------------
 RUN apt-get update && apt-get install -y \
     nauty \
@@ -37,7 +41,7 @@ RUN mkdir -p /app/static
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose HF-required port
+# Expose Hugging Face-required port
 EXPOSE 7860
 
 # Run Flask backend
