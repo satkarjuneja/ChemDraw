@@ -3,47 +3,112 @@
 
 <head>
     <title>Chem Draw</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body{
-            background-color: rgb(51, 245, 187);
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1abc9c, #16a085);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            margin: 0;
-            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            color: #fff;
         }
 
         h1 {
-            font-size: 40px;
-            margin-bottom: 20px;
+            font-size: 3rem;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            margin-bottom: 1rem;
         }
 
         #faltu {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 25px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            gap: 1rem;
+        }
+
+        #faltu h2 {
+            font-size: 1.8rem;
+            margin: 0;
+        }
+
+        #formula {
+            padding: 0.5rem 1rem;
+            font-size: 1.5rem;
+            border-radius: 15px;
+            border: none;
+            outline: none;
+            min-width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        #formula:focus {
+            box-shadow: 0 0 10px #fff;
+            transform: scale(1.05);
+        }
+
+        button {
+            padding: 0.7rem 1.5rem;
+            font-size: 1.5rem;
+            border: none;
+            border-radius: 15px;
+            background: #ffffff55;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background: #fff;
+            color: #16a085;
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
         }
 
         #result {
+            margin-top: 2rem;
             max-width: 80%;
-            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        #result:hover {
+            transform: scale(1.02);
+        }
+
+        @media (max-width: 600px) {
+            #faltu {
+                width: 90%;
+            }
+
+            #formula {
+                width: 100%;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h1>Welcome To Chem Draw</h1>
+    <h1>Chem Draw</h1>
 
     <div id="faltu">
-        <h2 style="font-size: 30px;">Enter a Simple Molecule</h2>
-        <input type="text" id="formula" style="border-radius: 20px; font-size: 30px;">
-        <button onclick="backend()" style="font-size: 30px; border-radius: 20px;">Generate</button>
+        <h2>Enter a Molecule</h2>
+        <input type="text" id="formula" placeholder="e.g. C6H6">
+        <button onclick="backend()">Generate</button>
     </div>
 
-    <img src="/static/molecules_grid.png?v=0" id="result" style="border-radius: 20px;">
+    <img src="/static/molecules_grid.png?v=0" id="result">
 
     <script>
         async function backend() {
