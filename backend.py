@@ -1,4 +1,4 @@
-# from flask import Flask, request, send_file
+# No i Donot have time to write the backend myself
 from flask import Flask, request, send_file, render_template
 
 import subprocess
@@ -18,14 +18,13 @@ def index():
     return render_template("index.html")
 
 
-CORS(app)  # allow frontend requests from another origin if needed
+CORS(app)
 
 
 
-# fixed PNG path
 
 STATIC_DIR = os.path.join(os.getcwd(), "static")
-os.makedirs(STATIC_DIR, exist_ok=True)  # ensures directory exists
+os.makedirs(STATIC_DIR, exist_ok=True)
 PNG_FILE = os.path.join(STATIC_DIR, "molecules_grid.png")
 
 
@@ -44,7 +43,6 @@ def generate():
 
 
 
-    # run your existing Matrix_Generation.py script with formula and PNG_FILE as output
 
 
     # subprocess.run([sys.executable, "Matrix_Generation.py", formula, PNG_FILE], check=True)
@@ -54,13 +52,11 @@ def generate():
 
 
 
-    # return a simple response (frontend will reload the <img>)
 
     return "OK", 200
 
 
 
-# optional: serve the PNG (if frontend wants direct URL)
 
 @app.route("/molecules_grid.png", methods=["GET"])
 

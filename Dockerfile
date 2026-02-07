@@ -1,4 +1,4 @@
-# Base image
+
 FROM continuumio/miniconda3:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+
 # -----------------------------
 # Build Nauty manually (geng etc.)
 # -----------------------------
@@ -27,7 +28,6 @@ RUN wget https://pallini.di.uniroma1.it/nauty27r1.tar.gz \
 
 # Verify geng works
 RUN /usr/local/bin/geng 1 || true
-# Install RDKit via conda-forge
 RUN conda install -c conda-forge rdkit python=3.10 -y && conda clean -afy
 
 # -----------------------------
@@ -42,8 +42,6 @@ COPY . .
 # Ensure static directory exists for saving PNGs
 RUN mkdir -p /app/static
 
-# Expose HF Spaces required port
 EXPOSE 7860
 
-# Run Flask backend
 CMD ["python", "backend.py"]

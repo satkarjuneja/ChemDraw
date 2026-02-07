@@ -122,13 +122,30 @@
 
     <div id="faltu">
         <h2>Enter Molecule Formula</h2>
-        <input type="text" id="formula" placeholder="e.g., C6H6">
-        <button onclick="backend()">Generate</button>
+        <input type="text" id="formula" placeholder="e.g., C6H6"/>
+        <button onclick="validate()">Generate</button>
     </div>
-
+    
     <img src="/static/molecules_grid.png?v=0" id="result">
+    <p id="warn" style="color:red; display:none;">
+        Only C, H, N with valid numbers allowed
+    </p>
 
     <script>
+        function validate() {
+            const s = document.getElementById("formula").value;
+            const warn = document.getElementById("warn");
+
+            const regex = /^((C|H|N)([1-9][0-9]*)?)+$/;
+            warn.style.display = regex.test(s) ? "none" : "block";
+            if (s !== "" && !regex.test(s)) {
+                alert("Only C, H, N with valid numbers allowed (e.g. C6H6)");
+            }
+            else{
+                backend()
+            }
+        }
+
         async function backend() {
             const formula = document.getElementById("formula").value;
             if (!formula) return alert("Enter a formula");

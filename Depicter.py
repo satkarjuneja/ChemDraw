@@ -9,7 +9,7 @@ mols = [Chem.MolFromSmiles(smi) for smi in smiles_list]
 
 img = Draw.MolsToGridImage(
     mols,             
-    molsPerRow=3,       
+    molsPerRow=4,       
     subImgSize=(200,200)
 )
 
