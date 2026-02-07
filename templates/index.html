@@ -122,10 +122,11 @@
 
     <div id="faltu">
         <h2>Enter Molecule Formula</h2>
-        <input type="text" id="formula" placeholder="e.g., C6H6"/>
+        <input type="text" id="formula" placeholder="e.g., C6H6" />
         <button onclick="validate()">Generate</button>
+        <button id="downloadBtn">Download</button>
     </div>
-    
+
     <img src="/static/molecules_grid.png?v=0" id="result">
     <p id="warn" style="color:red; display:none;">
         Only C, H, N with valid numbers allowed
@@ -141,7 +142,7 @@
             if (s !== "" && !regex.test(s)) {
                 alert("Only C, H, N with valid numbers allowed (e.g. C6H6)");
             }
-            else{
+            else {
                 backend()
             }
         }
@@ -150,15 +151,25 @@
             const formula = document.getElementById("formula").value;
             if (!formula) return alert("Enter a formula");
 
-            await fetch("/generate", {
+            const resp = await fetch("/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ formula })
             });
 
-            const img = document.getElementById("result");
-            img.src = "/static/molecules_grid.png?v=" + Date.now();
+            const data = await resp.json();
+            document.getElementById("result").src = data.img;
+            // img.src = "/static/molecules_grid.png?v=" + Date.now();
         }
+        
+        document.getElementById("downloadBtn").addEventListener("click", () => {
+            const img = document.getElementById("result");
+            const link = document.createElement("a");
+            link.href = img.src;  // Base64 from backend
+            link.download = "molecule.png"; // default filename
+            link.click();
+        });
+
     </script>
 </body>
 

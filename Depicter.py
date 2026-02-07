@@ -1,6 +1,9 @@
 from rdkit import Chem
 from rdkit.Chem import Draw
 import json
+import sys
+
+PNG_PATH=sys.argv[1]
 
 with open("molecules.json") as f:
     smiles_list = json.load(f)
@@ -13,5 +16,5 @@ img = Draw.MolsToGridImage(
     subImgSize=(200,200)
 )
 
-img.save("static/molecules_grid.png")
-print("Saved molecules_grid.png")
+img.save(PNG_PATH)
+print(f"Saved {PNG_PATH}")
