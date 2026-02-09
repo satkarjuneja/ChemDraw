@@ -36,7 +36,7 @@ prev_PDB_FILE =None
 @app.route("/generate", methods=["POST"])
 def generate():
     
-    global prev_PNG_FILE
+    global prev_PNG_FILE, prev_PDB_FILE    
     # okay did have to fix this myself since every png has a unique uuid and i 
     # wanted to delete the previous png before making a new one had to make all this arrangement
     
