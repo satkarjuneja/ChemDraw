@@ -30,6 +30,12 @@ CORS(app)
 STATIC_DIR = os.path.join(os.getcwd(), "static")
 os.makedirs(STATIC_DIR, exist_ok=True)
 
+STATIC_2D = os.path.join(STATIC_DIR, "2D")
+STATIC_3D = os.path.join(STATIC_DIR, "3D")
+
+os.makedirs(STATIC_2D, exist_ok=True)
+os.makedirs(STATIC_3D, exist_ok=True)
+
 
 prev_PNG_FILE = None
 prev_PDB_FILE =None
@@ -48,15 +54,14 @@ def generate():
     if prev_PNG_FILE is not None and os.path.exists(prev_PNG_FILE):
         os.remove(prev_PNG_FILE)
     if prev_PDB_FILE is not None and os.path.exists(prev_PDB_FILE):
-        os.remove(prev_PNG_FILE)
+        os.remove(prev_PDB_FILE)
 
 
         
     # Generate a unique PNG per request this creates a unique uuid for the png 
     # so now multiple users can use this at the same time :)
-    
-    PNG_FILE = os.path.join(STATIC_DIR+"/2D", f"{uuid.uuid4().hex}.png")
-    PDB_FILE = os.path.join(STATIC_DIR+"/3D", f"{uuid.uuid4().hex}.pdb")
+    PNG_FILE = os.path.join(STATIC_2D, f"{uuid.uuid4().hex}.png")
+    PDB_FILE = os.path.join(STATIC_3D, f"{uuid.uuid4().hex}.pdb")
 
     subprocess.run([sys.executable, "parser.py", formula, PNG_FILE,PDB_FILE], check=True)
 
