@@ -23,12 +23,12 @@ def generate_topologies(n_atoms, max_degree):
     """
     Uses geng to generate all connected, non-isomorphic graphs
     """
-    # cmd = ["geng", "-c", f"-D{max_degree}", str(n_atoms)]
-    # proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, text=True)
+    cmd = ["geng", "-c", f"-D{max_degree}", str(n_atoms)]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, text=True)
     # These lines are for testing purposes DO NOT REMOVE
     
-    cmd = ["/usr/local/bin/geng", "-c", f"-D{max_degree}", str(n_atoms)]
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, text=True)
+    # cmd = ["/usr/local/bin/geng", "-c", f"-D{max_degree}", str(n_atoms)]
+    # proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, text=True)
     graphs = []
     for line in proc.stdout:
         G = nx.from_graph6_bytes(line.strip().encode())
@@ -131,7 +131,7 @@ import sys
 import re
 
 X=sys.argv[1]
-PNG_PATH=sys.argv[2]
+# PNG_PATH=sys.argv[2]
 
 tokens = re.findall(r'([CHON])(\d*)', X)
 
@@ -154,5 +154,4 @@ for elem, num in tokens:
 
 if __name__ == "__main__":
     generate_isomers(C=c, H=h,N=n, outfile="molecules.json")
-    subprocess.run(["python", "Depicter.py",PNG_PATH])
-
+    # subprocess.run(["python", "Depicter.py",PNG_PATH])

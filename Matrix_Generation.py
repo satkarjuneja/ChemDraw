@@ -25,7 +25,6 @@ def adjacency_to_smiles(A, atoms):
 
 import re
 
-# X = input("Input simple chemical formula: ")
 X=sys.argv[1]
 tokens = re.findall(r'([CHON])(\d*)', X)
 
@@ -138,7 +137,7 @@ for A in matrices:
 print(f"Unique molecules after deduplication: {len(unique_smiles)}")
 print(unique_smiles)
 
-#save the molecules in a json file 
+
 
 import json
 
@@ -151,7 +150,3 @@ with open("molecules.json", "w") as f:
 print("Saved to molecules.json")
 
 
-# run the depicter file
-import subprocess
-
-subprocess.run(["python", "Depicter.py"])
