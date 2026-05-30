@@ -1,32 +1,32 @@
-# No i Do not have time to write the backend myself
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 
-from flask import Flask, request, send_file, render_template
-from flask import jsonify
+from pydantic import BaseModel, Field
+
 import subprocess
-
 import sys
-
 import os
-
-from flask_cors import CORS
-
 import base64
 import json
-import io
 import uuid
 
 
-app = Flask(__name__)
+#-------------FASTAPI SETUP---------------
 
-@app.route("/", methods=["GET"])
-def index():
-    return render_template("index.html")
+app = FastAPI(title="ChemDraw API", version="1.0")
 
+# CORS Configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-CORS(app)
-
-
-
+# Static file directories
 STATIC_DIR = os.path.join(os.getcwd(), "static")
 os.makedirs(STATIC_DIR, exist_ok=True)
 
@@ -36,54 +36,141 @@ STATIC_3D = os.path.join(STATIC_DIR, "3D")
 os.makedirs(STATIC_2D, exist_ok=True)
 os.makedirs(STATIC_3D, exist_ok=True)
 
-
-prev_PNG_FILE = None
-prev_PDB_FILE =None
-@app.route("/generate", methods=["POST"])
-def generate():
-    
-    global prev_PNG_FILE, prev_PDB_FILE    
-    # okay did have to fix this myself since every png has a unique uuid and i 
-    # wanted to delete the previous png before making a new one had to make all this arrangement
-    
-    data = request.get_json()
-    
-    formula = data.get("formula")
-    if not formula:
-        return "No formula provided", 400
-    if prev_PNG_FILE is not None and os.path.exists(prev_PNG_FILE):
-        os.remove(prev_PNG_FILE)
-    if prev_PDB_FILE is not None and os.path.exists(prev_PDB_FILE):
-        os.remove(prev_PDB_FILE)
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
+# ============================================================================
+# REQUEST/RESPONSE MODELS (Pydantic for automatic validation)
+# ============================================================================
+
+class FormulaRequest(BaseModel):
+    """API request for generating molecules"""
+    formula: str = Field(
+        ...,
+        min_length=1,
+        max_length=50,
+        description="Chemical formula (e.g., C6H6, CH4)"
+    )
+
+
+class GenerateResponse(BaseModel):
+    """API response with base64 image and molecules"""
+    img: str = Field(..., description="PNG image as base64 data URI")
+    molecules: list = Field(..., description="3D molecule data")
+
+
+# ============================================================================
+# GLOBAL STATE
+# ============================================================================
+
+class AppState:
+    """Store previous files for cleanup"""
+    prev_PNG_FILE = None
+    prev_PDB_FILE = None
+
+
+state = AppState()
+
+
+# ============================================================================
+# ROUTES
+# ============================================================================
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    """Serve index.html"""
+    try:
+        with open("templates/index.html", "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        return "<h1>ChemDraw API</h1><p>index.html not found</p>"
+
+
+@app.post("/generate", response_model=GenerateResponse)
+async def generate(request: FormulaRequest):
+    """
+    Generate chemical structure image and 3D data from formula.
+    
+    - Formula is automatically validated (non-empty, max 50 chars)
+    - Returns PNG as base64 and 3D molecule data
+    """
+    
+    formula = request.formula
+    
+    try:
+        # Cleanup previous files
+        if state.prev_PNG_FILE and os.path.exists(state.prev_PNG_FILE):
+            os.remove(state.prev_PNG_FILE)
+        if state.prev_PDB_FILE and os.path.exists(state.prev_PDB_FILE):
+            os.remove(state.prev_PDB_FILE)
+
+        # Generate unique filenames
+        PNG_FILE = os.path.join(STATIC_2D, f"{uuid.uuid4().hex}.png")
+        PDB_FILE = os.path.join(STATIC_3D, f"{uuid.uuid4().hex}.pdb")
+
+        # Run parser with timeout
+        result = subprocess.run(
+            [sys.executable, "parser.py", formula, PNG_FILE, PDB_FILE],
+            timeout=30,
+            capture_output=True,
+            text=True,
+            check=False
+        )
         
-    # Generate a unique PNG per request this creates a unique uuid for the png 
-    # so now multiple users can use this at the same time :)
-    PNG_FILE = os.path.join(STATIC_2D, f"{uuid.uuid4().hex}.png")
-    PDB_FILE = os.path.join(STATIC_3D, f"{uuid.uuid4().hex}.pdb")
+        if result.returncode != 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Generation failed: {result.stderr or result.stdout}"
+            )
 
-    subprocess.run([sys.executable, "parser.py", formula, PNG_FILE,PDB_FILE], check=True)
+        # Read PNG and convert to Base64
+        with open(PNG_FILE, "rb") as f:
+            img_b64 = base64.b64encode(f.read()).decode("utf-8")
 
-    # Read PNG and convert to Base64
-    with open(PNG_FILE, "rb") as f:
-        img_b64 = base64.b64encode(f.read()).decode("utf-8")
+        # Store for next cleanup
+        state.prev_PNG_FILE = PNG_FILE
+        state.prev_PDB_FILE = PDB_FILE
 
-    prev_PNG_FILE = PNG_FILE
-    prev_PDB_FILE =PDB_FILE
-    #Read JSON for 3D molecules Ideally could seprate the backend but :(
-    JSON_FILE = os.path.join(STATIC_DIR, "3d_molecules.json")
+        # Read 3D molecules JSON
+        JSON_FILE = os.path.join(STATIC_DIR, "3d_molecules.json")
+        with open(JSON_FILE) as f:
+            molecules = json.load(f)
 
-    with open(JSON_FILE) as f:
-        molecules = json.load(f)
+        return GenerateResponse(
+            img=f"data:image/png;base64,{img_b64}",
+            molecules=molecules
+        )
+
+    except subprocess.TimeoutExpired:
+        raise HTTPException(
+            status_code=408,
+            detail="Generation timeout - formula too complex"
+        )
     
-    # Return JSON with Base64 image and the 3D JSON file
-    return jsonify({
-        "img": f"data:image/png;base64,{img_b64}",
-        "molecules":molecules
-        })
+    except FileNotFoundError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"File not found: {str(e)}"
+        )
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Server error: {str(e)}"
+        )
 
+# ============================================================================
+# RUNNING THE APP
+# ============================================================================
 
 if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=7860,
+        reload=True  # Auto-restart on file changes
+    )
 
-    app.run(debug=True, host="0.0.0.0", port=7860)
+# uvicorn backend_fastapi:app --host 0.0.0.0 --port 7860 --reload
