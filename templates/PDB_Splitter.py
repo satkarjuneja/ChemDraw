@@ -1,21 +1,29 @@
 import json
 import sys
 
-print("I am being called")
 
-PDB_FILE = sys.argv[1]
+def split_pdb(pdb_file: str, output_path: str = "static/3d_molecules.json") -> None:
+    print("I am being called")
 
-current = []
-molecules = []
+    current = []
+    molecules = []
 
-with open(PDB_FILE) as f:
-    for line in f:
-        current.append(line)
-        if line.strip() == "END":
-            molecules.append(
-                {"id": f"mol_{len(molecules) + 1}", "pdb": "".join(current)}
-            )
-            current = []
+    with open(pdb_file) as f:
+        for line in f:
+            current.append(line)
+            if line.strip() == "END":
+                molecules.append(
+                    {"id": f"mol_{len(molecules) + 1}", "pdb": "".join(current)}
+                )
+                current = []
 
-with open("static/3d_molecules.json", "w") as out:
-    json.dump(molecules, out, indent=2)
+    with open(output_path, "w") as out:
+        json.dump(molecules, out, indent=2)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: PDB_Splitter.py <pdb_path>", file=sys.stderr)
+        sys.exit(1)
+
+    split_pdb(sys.argv[1])

@@ -67,7 +67,7 @@ def run_algorithm(formula: str, timeout: int = 30) -> None:
         subprocess.CalledProcessError: If algorithm fails
     """
 
-    # Algorithm    
+    # Algorithm
     script = "generator.py"
 
     # Check script exists
@@ -93,6 +93,33 @@ def run_algorithm(formula: str, timeout: int = 30) -> None:
         raise TimeoutError(f"Algorithm timeout after {timeout}s. Formula too complex.")
 
 
+def run_pipeline(formula: str, png_path: str, pdb_path: str, timeout: int = 30) -> None:
+    # Validate formula
+    validate_formula(formula)
+    print(f"✔ Formula validated: {formula}")
+
+    # Run algorithm
+    print("Generating isomers...")
+    run_algorithm(formula, timeout=timeout)
+    print("✔ Generated molecules.json")
+
+    # Render 2D
+    from Depicter import render_2d
+
+    render_2d(png_path)
+    print(f"✔ Rendered 2D: {png_path}")
+
+    # Render 3D
+    from depicter_3d import render_3d
+
+    render_3d(pdb_path)
+    print(f"✔ Rendered 3D: {pdb_path}")
+
+    from templates.PDB_Splitter import split_pdb
+
+    split_pdb(pdb_path)
+
+
 # Main entry point
 if __name__ == "__main__":
     try:
@@ -103,22 +130,7 @@ if __name__ == "__main__":
         png_path = sys.argv[2]
         pdb_path = sys.argv[3]
 
-        # Validate formula
-        atoms = validate_formula(formula)
-        print(f"✔ Formula validated: {formula}")
-
-        # Run algorithm
-        print("Generating isomers...")
-        run_algorithm(formula, timeout=30)
-        print("✔ Generated molecules.json")
-
-        # Render 2D
-        subprocess.run(["python", "Depicter.py", png_path], check=True)
-        print(f"✔ Rendered 2D: {png_path}")
-
-        # Render 3D
-        subprocess.run(["python", "3D_Depicter.py", pdb_path], check=True)
-        print(f"✔ Rendered 3D: {pdb_path}")
+        run_pipeline(formula, png_path, pdb_path, timeout=30)
 
     except ValueError as e:
         print(f"❌ Validation Error: {e}", file=sys.stderr)
@@ -135,5 +147,3 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"❌ Error: {type(e).__name__}: {e}", file=sys.stderr)
         sys.exit(1)
-
-    subprocess.run(["python", "templates/PDB_Splitter.py", pdb_path])

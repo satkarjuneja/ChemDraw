@@ -22,10 +22,15 @@ from collections import Counter
 
 # Maximum total bond order (valence) each element can have
 MAX_VALENCE = {
-    "C": 4, "N": 3, "O": 2,
-    "S": 6,   # S can be 2, 4, or 6; we cap at 6, RDKit sanitisation filters
+    "C": 4,
+    "N": 3,
+    "O": 2,
+    "S": 6,  # S can be 2, 4, or 6; we cap at 6, RDKit sanitisation filters
     "P": 5,
-    "F": 1, "Cl": 1, "Br": 1, "I": 1,
+    "F": 1,
+    "Cl": 1,
+    "Br": 1,
+    "I": 1,
 }
 
 # Elements that can participate in multiple bonds (double/triple)
@@ -38,6 +43,7 @@ TERMINAL_ATOMS = {"F", "Cl", "Br", "I"}
 # ---------------------------------------------------------------------------
 # Formula parsing
 # ---------------------------------------------------------------------------
+
 
 def parse_formula(formula: str) -> dict[str, int]:
     """
@@ -57,6 +63,7 @@ def parse_formula(formula: str) -> dict[str, int]:
 # Degree of unsaturation
 # ---------------------------------------------------------------------------
 
+
 def degree_of_unsaturation(formula: dict[str, int]) -> int:
     """
     DBE = (2C + 2 + N - H - X) / 2
@@ -64,11 +71,11 @@ def degree_of_unsaturation(formula: dict[str, int]) -> int:
     S and P contribute 0 to this formula.
     Returns int; raises if result is non-integer (invalid formula).
     """
-    C  = formula.get("C",  0)
-    H  = formula.get("H",  0)
-    N  = formula.get("N",  0)
-    X  = sum(formula.get(x, 0) for x in ("F", "Cl", "Br", "I"))
-    
+    C = formula.get("C", 0)
+    H = formula.get("H", 0)
+    N = formula.get("N", 0)
+    X = sum(formula.get(x, 0) for x in ("F", "Cl", "Br", "I"))
+
     numerator = 2 * C + 2 + N - H - X
     if numerator % 2 != 0:
         raise ValueError(
@@ -79,6 +86,7 @@ def degree_of_unsaturation(formula: dict[str, int]) -> int:
 
 # --------------Topology generation via geng------------------
 
+
 def generate_topologies(n_heavy: int, max_degree: int) -> list[nx.Graph]:
     """
     Call geng to produce all connected non-isomorphic graphs on n_heavy
@@ -86,12 +94,11 @@ def generate_topologies(n_heavy: int, max_degree: int) -> list[nx.Graph]:
     """
     cmd = ["geng", "-c", f"-D{max_degree}", str(n_heavy)]
     try:
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                stderr=subprocess.DEVNULL, text=True)
-    except FileNotFoundError:
-        raise RuntimeError(
-            "geng not found — install nauty and ensure geng is on PATH."
+        proc = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True
         )
+    except FileNotFoundError:
+        raise RuntimeError("geng not found — install nauty and ensure geng is on PATH.")
 
     graphs = []
     for line in proc.stdout:
@@ -105,6 +112,7 @@ def generate_topologies(n_heavy: int, max_degree: int) -> list[nx.Graph]:
 
 
 # -------------Atom-type assignment (heteroatom placement)-----------------
+
 
 def assign_atom_types(G: nx.Graph, formula: dict[str, int]) -> list[dict[int, str]]:
     """
@@ -165,10 +173,9 @@ def assign_atom_types(G: nx.Graph, formula: dict[str, int]) -> list[dict[int, st
 
 # ---------------Bond-order assignment-----------------
 
+
 def assign_bond_orders(
-    G: nx.Graph,
-    atom_types: dict[int, str],
-    dbe: int
+    G: nx.Graph, atom_types: dict[int, str], dbe: int
 ) -> list[dict[tuple, int]]:
     """
     Assign bond orders (1, 2, 3) to edges consistent with:
@@ -182,7 +189,7 @@ def assign_bond_orders(
     edges = list(G.edges())
     V = G.number_of_nodes()
     E = G.number_of_edges()
-    ring_count = E - V + 1   # for connected graph
+    ring_count = E - V + 1  # for connected graph
     pi_needed = dbe - ring_count
 
     if pi_needed < 0:
@@ -190,7 +197,8 @@ def assign_bond_orders(
 
     # Which edges can carry extra pi bonds?
     eligible = [
-        e for e in edges
+        e
+        for e in edges
         if atom_types[e[0]] in MULTIBOND_CAPABLE
         and atom_types[e[1]] in MULTIBOND_CAPABLE
     ]
@@ -230,17 +238,14 @@ def assign_bond_orders(
             valence[i] += order
             valence[j] += order
 
-        valid = all(
-            valence[n] <= MAX_VALENCE[atom_types[n]]
-            for n in G.nodes()
-        )
+        valid = all(valence[n] <= MAX_VALENCE[atom_types[n]] for n in G.nodes())
         if valid:
             results.append(bond_order)
 
     return results
 
 
-#---------------Build RDKit mol + hydrogen validation--------------------
+# ---------------Build RDKit mol + hydrogen validation--------------------
 
 BOND_TYPE_MAP = {
     1: Chem.BondType.SINGLE,
@@ -248,11 +253,12 @@ BOND_TYPE_MAP = {
     3: Chem.BondType.TRIPLE,
 }
 
+
 def build_mol(
     G: nx.Graph,
     atom_types: dict[int, str],
     bond_orders: dict[tuple, int],
-    expected_H: int
+    expected_H: int,
 ) -> Chem.Mol | None:
     """
     Build an RDKit molecule, sanitise it, and check the implicit H count
@@ -276,9 +282,7 @@ def build_mol(
 
     # Check hydrogen count matches formula
     mol_with_H = Chem.AddHs(mol)
-    actual_H = sum(
-        1 for a in mol_with_H.GetAtoms() if a.GetAtomicNum() == 1
-    )
+    actual_H = sum(1 for a in mol_with_H.GetAtoms() if a.GetAtomicNum() == 1)
     if actual_H != expected_H:
         return None
 
@@ -288,6 +292,7 @@ def build_mol(
 # ---------------------------------------------------------------------------
 # Main generator
 # ---------------------------------------------------------------------------
+
 
 def generate_isomers(formula_str: str, outfile: str = "molecules.json"):
     formula = parse_formula(formula_str)
@@ -312,7 +317,7 @@ def generate_isomers(formula_str: str, outfile: str = "molecules.json"):
     # since geng -D controls graph degree not bond order)
     max_graph_degree = min(
         max(MAX_VALENCE[e] for e in formula if e != "H"),
-        4  # geng's -D is graph degree (number of neighbours)
+        4,  # geng's -D is graph degree (number of neighbours)
     )
 
     print(f"Generating topologies (max graph degree {max_graph_degree})...")
@@ -340,7 +345,7 @@ def generate_isomers(formula_str: str, outfile: str = "molecules.json"):
     print(f"\nGenerated {len(molecules)} unique isomers -> {outfile}")
 
 
-#-----------Input-------------------
+# -----------Input-------------------
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -349,6 +354,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     formula_input = sys.argv[1]
-    output_file   = sys.argv[2] if len(sys.argv) > 2 else "molecules.json"
+    output_file = sys.argv[2] if len(sys.argv) > 2 else "molecules.json"
 
     generate_isomers(formula_input, output_file)

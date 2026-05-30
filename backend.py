@@ -5,15 +5,15 @@ from fastapi.responses import HTMLResponse
 
 from pydantic import BaseModel, Field
 
-import subprocess
 import sys
 import os
 import base64
 import json
 import uuid
+import subprocess
 
 
-#-------------FASTAPI SETUP---------------
+# -------------FASTAPI SETUP---------------
 
 app = FastAPI(title="ChemDraw API", version="1.0")
 
@@ -44,18 +44,21 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # REQUEST/RESPONSE MODELS (Pydantic for automatic validation)
 # ============================================================================
 
+
 class FormulaRequest(BaseModel):
     """API request for generating molecules"""
+
     formula: str = Field(
         ...,
         min_length=1,
         max_length=50,
-        description="Chemical formula (e.g., C6H6, CH4)"
+        description="Chemical formula (e.g., C6H6, CH4)",
     )
 
 
 class GenerateResponse(BaseModel):
     """API response with base64 image and molecules"""
+
     img: str = Field(..., description="PNG image as base64 data URI")
     molecules: list = Field(..., description="3D molecule data")
 
@@ -64,8 +67,10 @@ class GenerateResponse(BaseModel):
 # GLOBAL STATE
 # ============================================================================
 
+
 class AppState:
     """Store previous files for cleanup"""
+
     prev_PNG_FILE = None
     prev_PDB_FILE = None
 
@@ -76,6 +81,7 @@ state = AppState()
 # ============================================================================
 # ROUTES
 # ============================================================================
+
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
@@ -91,13 +97,13 @@ async def root():
 async def generate(request: FormulaRequest):
     """
     Generate chemical structure image and 3D data from formula.
-    
+
     - Formula is automatically validated (non-empty, max 50 chars)
     - Returns PNG as base64 and 3D molecule data
     """
-    
+
     formula = request.formula
-    
+
     try:
         # Cleanup previous files
         if state.prev_PNG_FILE and os.path.exists(state.prev_PNG_FILE):
@@ -109,20 +115,10 @@ async def generate(request: FormulaRequest):
         PNG_FILE = os.path.join(STATIC_2D, f"{uuid.uuid4().hex}.png")
         PDB_FILE = os.path.join(STATIC_3D, f"{uuid.uuid4().hex}.pdb")
 
-        # Run parser with timeout
-        result = subprocess.run(
-            [sys.executable, "parser.py", formula, PNG_FILE, PDB_FILE],
-            timeout=30,
-            capture_output=True,
-            text=True,
-            check=False
-        )
-        
-        if result.returncode != 0:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Generation failed: {result.stderr or result.stdout}"
-            )
+        # Run parser pipeline in-process
+        from parser import run_pipeline
+
+        run_pipeline(formula, PNG_FILE, PDB_FILE, timeout=30)
 
         # Read PNG and convert to Base64
         with open(PNG_FILE, "rb") as f:
@@ -138,27 +134,27 @@ async def generate(request: FormulaRequest):
             molecules = json.load(f)
 
         return GenerateResponse(
-            img=f"data:image/png;base64,{img_b64}",
-            molecules=molecules
+            img=f"data:image/png;base64,{img_b64}", molecules=molecules
         )
 
-    except subprocess.TimeoutExpired:
+    except TimeoutError:
         raise HTTPException(
-            status_code=408,
-            detail="Generation timeout - formula too complex"
+            status_code=408, detail="Generation timeout - formula too complex"
         )
-    
+    except subprocess.CalledProcessError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Generation failed: {e.stderr or e.stdout or e.output or str(e)}",
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Generation failed: {e}")
+
     except FileNotFoundError as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"File not found: {str(e)}"
-        )
-    
+        raise HTTPException(status_code=500, detail=f"File not found: {str(e)}")
+
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Server error: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
 
 # ============================================================================
 # RUNNING THE APP
@@ -166,11 +162,12 @@ async def generate(request: FormulaRequest):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         app,
         host="0.0.0.0",
         port=7860,
-        reload=True  # Auto-restart on file changes
+        reload=True,  # Auto-restart on file changes
     )
 
 # uvicorn backend_fastapi:app --host 0.0.0.0 --port 7860 --reload
