@@ -3,6 +3,9 @@ import re
 import subprocess
 from pathlib import Path
 
+ALLOWED_ELEMENTS = {"C", "H", "N", "O", "S", "P", "F", "Cl", "Br", "I"}
+ELEMENT_PATTERN = re.compile(r"(Cl|Br|[CHNOSPFI])(\d*)")
+
 
 def validate_formula(formula: str) -> dict:
     """
@@ -12,7 +15,7 @@ def validate_formula(formula: str) -> dict:
         formula: Chemical formula string, e.g., "C6H6"
 
     Returns:
-        Dictionary: {"C": 6, "H": 6, "N": 0, "O": 0}
+        Dictionary of element counts.
 
     Raises:
         ValueError: If formula is invalid or too large
@@ -25,31 +28,49 @@ def validate_formula(formula: str) -> dict:
     if not formula.strip():
         raise ValueError("Formula cannot be empty")
 
-    # Whitelist regex: only C, H, N, O with optional digits
-    pattern = r"^[CHNO]\d*([CHNO]\d*)*$"
+    atoms = {elem: 0 for elem in ALLOWED_ELEMENTS}
+    pos = 0
+    for match in ELEMENT_PATTERN.finditer(formula):
+        if match.start() != pos:
+            raise ValueError(
+                f"Invalid formula: {formula}. "
+                f"Use only {', '.join(sorted(ALLOWED_ELEMENTS))} with optional counts "
+                f"(e.g., C6H6, C2H5Cl)"
+            )
+        element, count_str = match.groups()
+        if element not in ALLOWED_ELEMENTS:
+            raise ValueError(
+                f"Invalid formula: {formula}. "
+                f"Use only {', '.join(sorted(ALLOWED_ELEMENTS))} with optional counts "
+                f"(e.g., C6H6, C2H5Cl)"
+            )
 
-    if not re.fullmatch(pattern, formula):
-        raise ValueError(
-            f"Invalid formula: {formula}. "
-            f"Use only C, H, N, O with optional counts (e.g., C6H6, CH4)"
-        )
-
-    # Parse formula
-    tokens = re.findall(r"([CHNO])(\d*)", formula)
-    atoms = {"C": 0, "H": 0, "N": 0, "O": 0}
-
-    for element, count_str in tokens:
         count = int(count_str) if count_str else 1
-
         if count > 1000:
             raise ValueError(f"Element {element} has count {count} (max 1000)")
 
         atoms[element] += count
+        pos = match.end()
+
+    if pos != len(formula):
+        raise ValueError(
+            f"Invalid formula: {formula}. "
+            f"Use only {', '.join(sorted(ALLOWED_ELEMENTS))} with optional counts "
+            f"(e.g., C6H6, C2H5Cl)"
+        )
 
     # Total atom limit (prevents DoS)
     total_atoms = sum(atoms.values())
     if total_atoms > 50:
         raise ValueError(f"Formula too large: {total_atoms} atoms (max 50)")
+
+    from generator import degree_of_unsaturation
+
+    dbe = degree_of_unsaturation(atoms)
+    if dbe < 0:
+        raise ValueError(
+            f"Invalid formula: {formula}. Negative DBE ({dbe})."
+        )
 
     return atoms
 

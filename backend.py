@@ -118,7 +118,7 @@ async def generate(request: FormulaRequest):
         # Run parser pipeline in-process
         from parser import run_pipeline
 
-        run_pipeline(formula, PNG_FILE, PDB_FILE, timeout=30)
+        run_pipeline(formula, PNG_FILE, PDB_FILE, timeout=60)
 
         # Read PNG and convert to Base64
         with open(PNG_FILE, "rb") as f:

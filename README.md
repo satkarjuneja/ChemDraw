@@ -29,13 +29,12 @@ Generate chemical structure grids from molecular formulas directly in your brows
 ---
 
 ## Supported Elements
-- **C** (Carbon)  
-- **H** (Hydrogen)    
-- Valid formulas include numbers after each element, e.g., `C6H6` or `C4H8`  
+- **C** (Carbon), **H** (Hydrogen), **N** (Nitrogen), **O** (Oxygen)  
+- **S** (Sulfur), **P** (Phosphorus), **F** (Fluorine), **Cl** (Chlorine), **Br** (Bromine), **I** (Iodine)  
+- Valid formulas include numbers after each element, e.g., `C6H6`, `C4H8`, `C2H5Cl`  
 
 ---
 
 ## Full Documentation
 For **setup instructions, Docker configuration, detailed usage, and extra screenshots**, see the full GitHub README:  
 [Full README](README_GITHUB.md)
-

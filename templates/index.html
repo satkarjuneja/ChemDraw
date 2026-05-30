@@ -6,102 +6,7 @@
 
     <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            min-height: 100vh;
-            color: #f0f0f0;
-            padding: 2rem 0;
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 3rem;
-            font-weight: 600;
-            margin-bottom: 2rem;
-        }
-
-        #Main {
-            margin: 0 auto 2rem auto;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            padding: 2rem 3rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            width: 80%;
-            max-width: 1000px;
-        }
-
-        #formula {
-            flex: 1;
-            padding: 0.8rem 1.2rem;
-            font-size: 1.3rem;
-            border-radius: 12px;
-            border: none;
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
-
-        button {
-            padding: 0.8rem 1.6rem;
-            font-size: 1.2rem;
-            border-radius: 12px;
-            border: none;
-            background: linear-gradient(135deg, #00f5a0, #00d1ff);
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        #modeToggle {
-            width: 100%;
-            display: flex;
-            gap: 1.5rem;
-            margin-top: 0.5rem;
-            font-size: 1.1rem;
-        }
-
-        .content {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-        }
-
-        .page {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        #page2d img {
-            max-width: 80%;
-            border-radius: 20px;
-        }
-
-        #viewer3d {
-            position: relative;
-            width: 700px;
-            height: 700px;
-            background: #111;
-            border-radius: 100px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-        }
-
-        #nav3d {
-            margin-top: 1.5rem;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        #indexLabel {
-            font-size: 1.1rem;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 
 <body>
@@ -116,6 +21,7 @@
             <label><input type="radio" name="mode" value="2d" checked> 2D</label>
             <label><input type="radio" name="mode" value="3d"> 3D</label>
         </div>
+        <div id="statusBar" data-state="info"></div>
     </div>
 
     <div class="content">
@@ -131,111 +37,7 @@
         </div>
     </div>
 
-    <script>
-        function getMode() {
-            return document.querySelector('input[name="mode"]:checked').value;
-        }
-
-        function showPage(id) {
-            document.getElementById("page2d").style.display = "none";
-            document.getElementById("page3d").style.display = "none";
-            document.getElementById(id).style.display = "flex";
-        }
-
-        async function run() {
-            getMode() === "2d" ? run2D() : run3D();
-        }
-
-        async function run2D() {
-            showPage("page2d");
-            const formula = document.getElementById("formula").value;
-            if (!formula) return alert("Enter a formula");
-
-            const resp = await fetch("/generate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ formula })
-            });
-
-            const data = await resp.json();
-            document.getElementById("page2d").innerHTML =
-                `<img id="result" src="${data.img}">`;
-
-        }
-
-        let molecules = [];
-        let index = 0;
-
-        async function run3D() {
-            showPage("page3d");
-
-            const formula = document.getElementById("formula").value;
-            if (!formula) return alert("Enter a formula");
-
-            const resp = await fetch("/generate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ formula })
-            });
-
-            const data = await resp.json();
-
-            molecules = data.molecules;
-
-            if (!molecules.length) {
-                alert("No molecules generated");
-                return;
-            }
-
-            index = 0;
-            renderMol();
-        }
-
-
-        function renderMol() {
-            const box = document.getElementById("viewer3d");
-            box.innerHTML = "";
-
-            box.getBoundingClientRect();
-
-            const viewer = $3Dmol.createViewer(box, { backgroundColor: "black" });
-            viewer.addModel(molecules[index].pdb, "pdb");
-            viewer.setStyle({}, { stick: {} });
-            viewer.zoomTo();
-
-
-            viewer.resize();
-            viewer.render();
-
-            document.getElementById("indexLabel").textContent =
-                `Molecule ${index + 1} / ${molecules.length}`;
-        }
-
-
-        function nextMol() {
-            if (index < molecules.length - 1) {
-                index++;
-                renderMol();
-            }
-        }
-
-        function prevMol() {
-            if (index > 0) {
-                index--;
-                renderMol();
-            }
-        }
-
-
-        document.getElementById("downloadBtn").addEventListener("click", () => {
-            const img = document.getElementById("result");
-            const link = document.createElement("a");
-            link.href = img.src;
-            link.download = "molecule.png";
-            link.click();
-        });
-
-    </script>
+    <script src="/static/app.js"></script>
 
 </body>
 
