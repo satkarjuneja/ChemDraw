@@ -2,6 +2,6 @@
 static/generated/*.png
 api/*.png
 __pycache__/
-
-static/
+static/2D
+static/3D
 Copilot_Suggestions/

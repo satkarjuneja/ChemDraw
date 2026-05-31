@@ -38,7 +38,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-
+RUN ls -la /app/static/
 # Ensure static directory exists for saving PNGs
 RUN mkdir -p /app/static
 

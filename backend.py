@@ -37,8 +37,7 @@ os.makedirs(STATIC_2D, exist_ok=True)
 os.makedirs(STATIC_3D, exist_ok=True)
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
+app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
 
 # ============================================================================
 # REQUEST/RESPONSE MODELS (Pydantic for automatic validation)
