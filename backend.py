@@ -11,6 +11,8 @@ import json
 import uuid
 import subprocess
 
+from viewer.routes import router as viewer_router
+
 
 # -------------FASTAPI SETUP---------------
 
@@ -41,6 +43,12 @@ app.mount(
     StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")),
     name="static",
 )
+
+app.include_router(viewer_router)
+
+from viewer.routes import router as viewer_router
+
+app.include_router(viewer_router)
 
 # ============================================================================
 # REQUEST/RESPONSE MODELS (Pydantic for automatic validation)
@@ -97,6 +105,16 @@ async def root():
             return f.read()
     except FileNotFoundError:
         return "<h1>ChemDraw API</h1><p>index.html not found</p>"
+
+
+@app.get("/viewer", response_class=HTMLResponse)
+async def viewer():
+    """Serve viewer page"""
+    try:
+        with open("viewer/index.html", "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        return "<h1>ChemDraw API</h1><p>viewer page not found</p>"
 
 
 @app.post("/generate", response_model=GenerateResponse)

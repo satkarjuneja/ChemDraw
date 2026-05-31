@@ -154,18 +154,20 @@ button:active {
     accent-color: #39ff8f;
 }
 
-#statusBar {
+.modeToggle {
     width: 100%;
-    padding: 0.6rem 0.9rem;
-    border-radius: 10px;
-    border: 1px solid #2a2a3d;
-    background: #101018;
-    color: #6b6b8a;
-    font-size: 0.95rem;
-    min-height: 1.2rem;
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+    color: #e8e8f0;
 }
 
-#viewStatusBar {
+.modeToggle input[type="radio"] {
+    accent-color: #39ff8f;
+}
+
+#statusBar {
     width: 100%;
     padding: 0.6rem 0.9rem;
     border-radius: 10px;
@@ -184,6 +186,38 @@ button:active {
 #statusBar[data-state="error"] {
     color: #ff6b6b;
     border-color: #4b2a35;
+}
+
+.statusBar {
+    width: 95%;
+    padding: 0.6rem 0.9rem;
+    border-radius: 10px;
+    border: 1px solid #2a2a3d;
+    background: #101018;
+    color: #6b6b8a;
+    font-size: 0.95rem;
+    min-height: 1.2rem;
+}
+
+.statusBar[data-state="success"] {
+    color: #39ff8f;
+    border-color: #2a3d2f;
+}
+
+.statusBar[data-state="error"] {
+    color: #ff6b6b;
+    border-color: #4b2a35;
+}
+
+#viewStatusBar {
+    width: 100%;
+    padding: 0.6rem 0.9rem;
+    border-radius: 10px;
+    border: 1px solid #2a2a3d;
+    background: #101018;
+    color: #6b6b8a;
+    font-size: 0.95rem;
+    min-height: 1.2rem;
 }
 
 #viewStatusBar[data-state="success"] {
@@ -245,6 +279,28 @@ button:active {
 
 #view2d img {
     width: 100%;
+    border-radius: 16px;
+    border: 1px solid #2a2a3d;
+}
+
+.viewerContent {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.viewer2d img {
+    width: 100%;
+    border-radius: 16px;
+    border: 1px solid #2a2a3d;
+}
+
+.viewer3d {
+    position: relative;
+    width: 100%;
+    height: 360px;
+    background: #13131a;
     border-radius: 16px;
     border: 1px solid #2a2a3d;
 }

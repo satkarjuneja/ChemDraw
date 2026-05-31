@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Chem Draw - Viewer</title>
+
+    <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+
+    <h1>Chem Draw</h1>
+
+    <div id="navBar">
+        <div id="navBrand">Chem Draw</div>
+        <div id="navLinks">
+            <a class="navLink" href="/">Generator</a>
+            <a class="navLink active" href="/viewer">Viewer</a>
+        </div>
+    </div>
+
+    <div id="viewLayout">
+        <div class="viewerPanel">
+            <h2>SMILES Viewer</h2>
+            <input type="text" id="smilesInput" placeholder="e.g., C1=CC=CC=C1" />
+            <button id="smilesGenerateBtn" type="button">Visualize</button>
+            <div class="modeToggle">
+                <label><input type="radio" name="smilesMode" value="2d" checked> 2D</label>
+                <label><input type="radio" name="smilesMode" value="3d"> 3D</label>
+            </div>
+            <div id="smilesStatusBar" class="statusBar" data-state="info"></div>
+            <div class="viewerContent">
+                <div id="smiles2d" class="viewer2d"></div>
+                <div id="smiles3d" class="viewer3d"></div>
+            </div>
+        </div>
+
+        <div class="viewerPanel">
+            <h2>PDB Viewer</h2>
+            <input type="file" id="pdbFileInput" accept=".pdb" />
+            <button id="pdbGenerateBtn" type="button">Visualize</button>
+            <div class="modeToggle">
+                <label><input type="radio" name="pdbMode" value="2d" checked> 2D</label>
+                <label><input type="radio" name="pdbMode" value="3d"> 3D</label>
+            </div>
+            <div id="pdbStatusBar" class="statusBar" data-state="info"></div>
+            <div class="viewerContent">
+                <div id="pdb2d" class="viewer2d"></div>
+                <div id="pdb3d" class="viewer3d"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/viewer.js" defer></script>
+
+</body>
+
+</html>
