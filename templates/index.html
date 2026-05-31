@@ -15,8 +15,8 @@
 
     <div id="Main">
         <input type="text" id="formula" placeholder="e.g., C6H6" />
-        <button onclick="run()">Generate</button>
-        <button id="downloadBtn">Download</button>
+        <button id="generateBtn" type="button">Generate</button>
+        <button id="downloadBtn" type="button">Download</button>
         <div id="modeToggle">
             <label><input type="radio" name="mode" value="2d" checked> 2D</label>
             <label><input type="radio" name="mode" value="3d"> 3D</label>
@@ -30,9 +30,9 @@
         <div id="page3d" class="page">
             <div id="viewer3d"></div>
             <div id="nav3d">
-                <button onclick="prevMol()">◀ Previous</button>
+                <button id="prevBtn" type="button">◀ Previous</button>
                 <span id="indexLabel"></span>
-                <button onclick="nextMol()">Next ▶</button>
+                <button id="nextBtn" type="button">Next ▶</button>
             </div>
         </div>
     </div>

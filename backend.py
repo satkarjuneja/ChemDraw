@@ -5,7 +5,6 @@ from fastapi.responses import HTMLResponse
 
 from pydantic import BaseModel, Field
 
-import sys
 import os
 import base64
 import json
@@ -37,7 +36,11 @@ os.makedirs(STATIC_2D, exist_ok=True)
 os.makedirs(STATIC_3D, exist_ok=True)
 
 # Mount static files
-app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
+app.mount(
+    "/static",
+    StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")),
+    name="static",
+)
 
 # ============================================================================
 # REQUEST/RESPONSE MODELS (Pydantic for automatic validation)
@@ -53,13 +56,17 @@ class FormulaRequest(BaseModel):
         max_length=50,
         description="Chemical formula (e.g., C6H6, CH4)",
     )
+    is_3d: bool = Field(
+        False,
+        description="When true, generate 3D data only. When false, generate 2D image only.",
+    )
 
 
 class GenerateResponse(BaseModel):
     """API response with base64 image and molecules"""
 
-    img: str = Field(..., description="PNG image as base64 data URI")
-    molecules: list = Field(..., description="3D molecule data")
+    img: str | None = Field(None, description="PNG image as base64 data URI")
+    molecules: list | None = Field(None, description="3D molecule data")
 
 
 # ============================================================================
@@ -95,46 +102,62 @@ async def root():
 @app.post("/generate", response_model=GenerateResponse)
 async def generate(request: FormulaRequest):
     """
-    Generate chemical structure image and 3D data from formula.
+    Generate either a 2D image or 3D data from formula.
 
     - Formula is automatically validated (non-empty, max 50 chars)
-    - Returns PNG as base64 and 3D molecule data
+    - If is_3d is True, returns 3D molecule data
+    - If is_3d is False, returns PNG as base64
     """
 
     formula = request.formula
+    is_3d = request.is_3d
 
     try:
-        # Cleanup previous files
-        if state.prev_PNG_FILE and os.path.exists(state.prev_PNG_FILE):
-            os.remove(state.prev_PNG_FILE)
-        if state.prev_PDB_FILE and os.path.exists(state.prev_PDB_FILE):
-            os.remove(state.prev_PDB_FILE)
-
-        # Generate unique filenames
-        PNG_FILE = os.path.join(STATIC_2D, f"{uuid.uuid4().hex}.png")
-        PDB_FILE = os.path.join(STATIC_3D, f"{uuid.uuid4().hex}.pdb")
-
-        # Run parser pipeline in-process
         from parser import run_pipeline
 
-        run_pipeline(formula, PNG_FILE, PDB_FILE, timeout=60)
+        if is_3d:
+            if state.prev_PDB_FILE and os.path.exists(state.prev_PDB_FILE):
+                os.remove(state.prev_PDB_FILE)
 
-        # Read PNG and convert to Base64
+            PDB_FILE = os.path.join(STATIC_3D, f"{uuid.uuid4().hex}.pdb")
+            print("HELO")
+            run_pipeline(
+                formula,
+                None,
+                PDB_FILE,
+                timeout=60,
+                render_2d=False,
+                render_3d=True,
+            )
+
+            state.prev_PDB_FILE = PDB_FILE
+
+            JSON_FILE = os.path.join(STATIC_DIR, "3d_molecules.json")
+            with open(JSON_FILE) as f:
+                molecules = json.load(f)
+
+            return GenerateResponse(molecules=molecules)
+
+        if state.prev_PNG_FILE and os.path.exists(state.prev_PNG_FILE):
+            os.remove(state.prev_PNG_FILE)
+
+        PNG_FILE = os.path.join(STATIC_2D, f"{uuid.uuid4().hex}.png")
+
+        run_pipeline(
+            formula,
+            PNG_FILE,
+            None,
+            timeout=60,
+            render_2d=True,
+            render_3d=False,
+        )
+
         with open(PNG_FILE, "rb") as f:
             img_b64 = base64.b64encode(f.read()).decode("utf-8")
 
-        # Store for next cleanup
         state.prev_PNG_FILE = PNG_FILE
-        state.prev_PDB_FILE = PDB_FILE
 
-        # Read 3D molecules JSON
-        JSON_FILE = os.path.join(STATIC_DIR, "3d_molecules.json")
-        with open(JSON_FILE) as f:
-            molecules = json.load(f)
-
-        return GenerateResponse(
-            img=f"data:image/png;base64,{img_b64}", molecules=molecules
-        )
+        return GenerateResponse(img=f"data:image/png;base64,{img_b64}")
 
     except TimeoutError:
         raise HTTPException(

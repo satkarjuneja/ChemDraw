@@ -20,23 +20,14 @@ function setStatus(message, state = "info") {
     bar.dataset.state = state;
 }
 
-function setViewStatus(message, state = "info") {
-    const bar = document.getElementById("viewStatusBar");
-    if (!bar) {
-        return;
-    }
-    bar.textContent = message;
-    bar.dataset.state = state;
-}
-
-async function requestGeneration(formula) {
+async function requestGeneration(formula, is3d) {
     const start = performance.now();
     let resp;
     try {
         resp = await fetch("/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ formula })
+            body: JSON.stringify({ formula, is_3d: is3d })
         });
     } catch (err) {
         setStatus(`Network error: ${err.message || err}`, "error");
@@ -66,39 +57,6 @@ async function requestGeneration(formula) {
     return { data, elapsed };
 }
 
-async function requestView(url, options) {
-    const start = performance.now();
-    let resp;
-    try {
-        resp = await fetch(url, options);
-    } catch (err) {
-        setViewStatus(`Network error: ${err.message || err}`, "error");
-        return null;
-    }
-
-    const elapsed = (performance.now() - start) / 1000;
-    const text = await resp.text();
-    let data = null;
-    try {
-        data = JSON.parse(text);
-    } catch (err) {
-        data = null;
-    }
-
-    if (!resp.ok) {
-        const detail = data && data.detail ? data.detail : (text || resp.statusText);
-        setViewStatus(`Error: ${detail} (${elapsed.toFixed(2)}s)`, "error");
-        return null;
-    }
-
-    if (!data) {
-        setViewStatus(`Error: invalid server response (${elapsed.toFixed(2)}s)`, "error");
-        return null;
-    }
-
-    return { data, elapsed };
-}
-
 async function run() {
     getMode() === "2d" ? run2D() : run3D();
 }
@@ -112,7 +70,7 @@ async function run2D() {
     }
 
     setStatus("Generating...", "info");
-    const result = await requestGeneration(formula);
+    const result = await requestGeneration(formula, false);
     if (!result) return;
 
     const { data, elapsed } = result;
@@ -131,7 +89,7 @@ async function run3D() {
     }
 
     setStatus("Generating...", "info");
-    const result = await requestGeneration(formula);
+    const result = await requestGeneration(formula, true);
     if (!result) return;
 
     const { data, elapsed } = result;
@@ -179,67 +137,6 @@ function prevMol() {
     }
 }
 
-function renderSinglePdb(pdbText) {
-    const box = document.getElementById("viewer3dSingle");
-    if (!box) {
-        return;
-    }
-    box.innerHTML = "";
-    box.getBoundingClientRect();
-
-    const viewer = $3Dmol.createViewer(box, { backgroundColor: "black" });
-    viewer.addModel(pdbText, "pdb");
-    viewer.setStyle({}, { stick: {} });
-    viewer.zoomTo();
-    viewer.resize();
-    viewer.render();
-}
-
-async function viewSmiles() {
-    const smiles = document.getElementById("smilesInput").value.trim();
-    if (!smiles) {
-        setViewStatus("Enter a SMILES string", "error");
-        return;
-    }
-
-    setViewStatus("Rendering...", "info");
-    const result = await requestView("/view/smiles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ smiles })
-    });
-    if (!result) return;
-
-    const { data, elapsed } = result;
-    document.getElementById("view2d").innerHTML = `<img src="${data.img}" alt="2D view">`;
-    renderSinglePdb(data.pdb);
-    setViewStatus(`Rendered in ${elapsed.toFixed(2)}s`, "success");
-}
-
-async function viewPdb() {
-    const fileInput = document.getElementById("pdbFile");
-    const file = fileInput ? fileInput.files[0] : null;
-    if (!file) {
-        setViewStatus("Select a PDB file first", "error");
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    setViewStatus("Rendering...", "info");
-    const result = await requestView("/view/pdb", {
-        method: "POST",
-        body: formData
-    });
-    if (!result) return;
-
-    const { data, elapsed } = result;
-    document.getElementById("view2d").innerHTML = `<img src="${data.img}" alt="2D view">`;
-    renderSinglePdb(data.pdb);
-    setViewStatus(`Rendered in ${elapsed.toFixed(2)}s`, "success");
-}
-
 const downloadBtn = document.getElementById("downloadBtn");
 if (downloadBtn) {
     downloadBtn.addEventListener("click", () => {
@@ -255,5 +152,25 @@ if (downloadBtn) {
     });
 }
 
+const generateBtn = document.getElementById("generateBtn");
+if (generateBtn) {
+    generateBtn.addEventListener("click", () => {
+        run();
+    });
+}
+
+const nextBtn = document.getElementById("nextBtn");
+if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+        nextMol();
+    });
+}
+
+const prevBtn = document.getElementById("prevBtn");
+if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+        prevMol();
+    });
+}
+
 setStatus("Ready", "info");
-setViewStatus("Ready", "info");

@@ -14,8 +14,6 @@ import sys
 import re
 import networkx as nx
 from rdkit import Chem
-from rdkit.Chem import rdMolDescriptors
-from collections import Counter
 
 
 # ----------------Valence config------------------

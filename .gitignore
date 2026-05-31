@@ -5,3 +5,4 @@ __pycache__/
 static/2D
 static/3D
 Copilot_Suggestions/
+tests/

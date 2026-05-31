@@ -55,7 +55,9 @@ def percentile(values: list[float], p: float) -> float | None:
     return ordered[idx]
 
 
-def run_once(codebase: Path, formula: str, timeout: float) -> tuple[float | None, str | None]:
+def run_once(
+    codebase: Path, formula: str, timeout: float
+) -> tuple[float | None, str | None]:
     with tempfile.TemporaryDirectory() as temp_dir:
         png_path = Path(temp_dir) / "out.png"
         pdb_path = Path(temp_dir) / "out.pdb"
@@ -122,10 +124,23 @@ def benchmark_codebase(
     return results
 
 
-def write_results_csv(path: Path, results_by_label: dict[str, dict[str, dict[str, object]]]) -> None:
+def write_results_csv(
+    path: Path, results_by_label: dict[str, dict[str, dict[str, object]]]
+) -> None:
     with path.open("w", newline="") as handle:
         writer = csv.writer(handle)
-        writer.writerow(["label", "formula", "runs", "successes", "timeouts", "errors", "median_s", "p95_s"])
+        writer.writerow(
+            [
+                "label",
+                "formula",
+                "runs",
+                "successes",
+                "timeouts",
+                "errors",
+                "median_s",
+                "p95_s",
+            ]
+        )
         for label, results in results_by_label.items():
             for formula, data in results.items():
                 writer.writerow(
@@ -150,7 +165,9 @@ def plot_results(
     output_path: Path,
     logy: bool,
 ) -> None:
-    def median_or_timeout(results: dict[str, dict[str, object]]) -> tuple[list[float], set[int]]:
+    def median_or_timeout(
+        results: dict[str, dict[str, object]],
+    ) -> tuple[list[float], set[int]]:
         values = []
         timed_out = set()
         for idx, formula in enumerate(formulas):
@@ -211,9 +228,15 @@ def main() -> int:
     parser.add_argument("--timeout", type=float, default=20.0)
     parser.add_argument("--stop-after-timeouts", type=int, default=1)
     parser.add_argument("--formula-file", type=Path)
-    parser.add_argument("--plot", type=Path, default=Path(__file__).parent / "benchmark.png")
-    parser.add_argument("--csv", type=Path, default=Path(__file__).parent / "benchmark.csv")
-    parser.add_argument("--json", type=Path, default=Path(__file__).parent / "benchmark.json")
+    parser.add_argument(
+        "--plot", type=Path, default=Path(__file__).parent / "benchmark.png"
+    )
+    parser.add_argument(
+        "--csv", type=Path, default=Path(__file__).parent / "benchmark.csv"
+    )
+    parser.add_argument(
+        "--json", type=Path, default=Path(__file__).parent / "benchmark.json"
+    )
     parser.add_argument("--logy", action="store_true")
     args = parser.parse_args()
 

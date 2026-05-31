@@ -68,9 +68,7 @@ def validate_formula(formula: str) -> dict:
 
     dbe = degree_of_unsaturation(atoms)
     if dbe < 0:
-        raise ValueError(
-            f"Invalid formula: {formula}. Negative DBE ({dbe})."
-        )
+        raise ValueError(f"Invalid formula: {formula}. Negative DBE ({dbe}).")
 
     return atoms
 
@@ -114,10 +112,22 @@ def run_algorithm(formula: str, timeout: int = 30) -> None:
         raise TimeoutError(f"Algorithm timeout after {timeout}s. Formula too complex.")
 
 
-def run_pipeline(formula: str, png_path: str, pdb_path: str, timeout: int = 30) -> None:
+def run_pipeline(
+    formula: str,
+    png_path: str | None,
+    pdb_path: str | None,
+    timeout: int = 30,
+    render_2d: bool = True,
+    render_3d: bool = True,
+) -> None:
     # Validate formula
     validate_formula(formula)
     print(f"✔ Formula validated: {formula}")
+
+    if render_2d and not png_path:
+        raise ValueError("png_path is required when render_2d is True")
+    if render_3d and not pdb_path:
+        raise ValueError("pdb_path is required when render_3d is True")
 
     # Run algorithm
     print("Generating isomers...")
@@ -125,20 +135,22 @@ def run_pipeline(formula: str, png_path: str, pdb_path: str, timeout: int = 30) 
     print("✔ Generated molecules.json")
 
     # Render 2D
-    from Depicter import render_2d
+    if render_2d:
+        from Depicter import render_2d
 
-    render_2d(png_path)
-    print(f"✔ Rendered 2D: {png_path}")
+        render_2d(png_path)
+        print(f"✔ Rendered 2D: {png_path}")
 
     # Render 3D
-    from depicter_3d import render_3d
+    if render_3d:
+        from depicter_3d import render_3d
 
-    render_3d(pdb_path)
-    print(f"✔ Rendered 3D: {pdb_path}")
+        render_3d(pdb_path)
+        print(f"✔ Rendered 3D: {pdb_path}")
 
-    from templates.PDB_Splitter import split_pdb
+        from templates.PDB_Splitter import split_pdb
 
-    split_pdb(pdb_path)
+        split_pdb(pdb_path)
 
 
 # Main entry point
